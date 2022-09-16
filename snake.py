@@ -19,17 +19,20 @@ WINDOW_Y=800
 DIFFICULTY=10
 
 class SnakeGame:
+    #Snake variables
     snake_body = []
     body_len = 0
     score = 0
     curr_head = 0
     do_mov = False
     direction = 0
+
+    #Apple variables
+    eaten = False
     apple_x = 0
     apple_y = 0
 
     #Training variables
-    eaten = False
     reward  = 0
     done = False
 
@@ -194,7 +197,7 @@ my_snake = SnakeGame()
 
 my_snake.res_init()
 while True:
-    caught = my_snake.play_step(0)
+    my_snake.play_step(0)
 
 pygame.quit()
 quit()
