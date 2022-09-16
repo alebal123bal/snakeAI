@@ -17,7 +17,7 @@ WINDOW_X=800
 WINDOW_Y=800
 
 #Lower value, easier game
-DIFFICULTY = 1
+DIFFICULTY = 10
 
 class direction(Enum):
     RIGHT = 0
@@ -147,8 +147,6 @@ class SnakeGame:
         if self.apple_y < curr_head[1]:
             self.game_status.food_direction_up = 1
 
-        print("Danger left: ", self.game_status.danger_left)
-
 
     #Function to randomly create food
     def create_food(self):
@@ -158,8 +156,8 @@ class SnakeGame:
         while f!=0:
             try:
                 f=self.snake_body.index((x,y))
-                x = random.randrange(0,WINDOW_X/SQUARE_SIZE-1)*SQUARE_SIZE
-                y = random.randrange(0,WINDOW_X/SQUARE_SIZE-1)*SQUARE_SIZE
+                x = random.randrange(0,int(WINDOW_X/SQUARE_SIZE-1))*SQUARE_SIZE
+                y = random.randrange(0,int(WINDOW_X/SQUARE_SIZE-1))*SQUARE_SIZE
             except ValueError:
                 f=0    
         self.apple_eaten = False
@@ -276,6 +274,38 @@ class SnakeGame:
         return self.reward, self.done, self.score
 
 
+class NeuralNetwork():
+    #(value, bias)
+    in_neurons = [0]*12
+    hidden_neurons = [(0, 0)]*4
+    out_neurons = [(0, 0)]*4
+
+    weights_first = [0][0]
+    weights_second = [0][0]
+
+    #Called once at the start
+    def _randomize(self):
+        for i in self.in_neurons:
+            self.in_neurons = (random.randrange(0, 1))
+        for i in self.hidden_neurons:
+            self.hidden_neurons = (random.randrange(0, 1), random.randrange(-1, 1))
+        for i in self.out_neurons:
+            self.out_neurons = (random.randrange(0, 1), random.randrange(-1, 1))
+        
+        for i in self.weights_first[i]:
+            for j in self.weights_first[i][j]:
+                self.weights_first[i][j] = random.randrange(-1, 1)
+
+        for i in self.weights_second[i]:
+            for j in self.weights_second[i][j]:
+                self.weights_second[i][j] = random.randrange(-1, 1)
+        
+        
+
+
+
+
+
 #Init window
 pygame.init()
 dis=pygame.display.set_mode((WINDOW_X,WINDOW_Y))
@@ -285,8 +315,14 @@ pygame.font.init()
 my_font = pygame.font.SysFont('Comic Sans MS', 30)
 clock=pygame.time.Clock()
 
+#Init snake
 my_snake = SnakeGame()
 my_snake.res_init()
+
+#Init neural network
+my_neural_network = NeuralNetwork()
+my_neural_network._randomize()
+
 while True:
     my_snake.status_eval()
     #Update window
