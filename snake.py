@@ -17,7 +17,7 @@ WINDOW_X=800
 WINDOW_Y=800
 
 #Lower value, easier game
-DIFFICULTY = 10
+DIFFICULTY = 1
 
 class direction(Enum):
     RIGHT = 0
@@ -80,7 +80,9 @@ class SnakeGame:
         #Reset status
         self.game_status = status()
 
+        #Get current head
         (x, y) = self.snake_body[self.snake_curr_head]
+        curr_head = (x, y)
 
         #Calculate squares close to the head
         if self.snake_direction==direction.RIGHT:
@@ -101,13 +103,13 @@ class SnakeGame:
             left_sq = (x-SQUARE_SIZE, y)
 
         #Check if danger is wall
-        if ahead_sq[0] == -SQUARE_SIZE or ahead_sq[1] == -SQUARE_SIZE or ahead_sq[0] == WINDOW_X-SQUARE_SIZE or ahead_sq[1] == WINDOW_Y-SQUARE_SIZE:
+        if ahead_sq[0] == -SQUARE_SIZE or ahead_sq[1] == -SQUARE_SIZE or ahead_sq[0] == WINDOW_X or ahead_sq[1] == WINDOW_Y:
             self.game_status.danger_ahead_sq = 1
 
-        if right_sq[0] == -SQUARE_SIZE or right_sq[1] == -SQUARE_SIZE or right_sq[0] == WINDOW_X-SQUARE_SIZE or right_sq[1] == WINDOW_Y-SQUARE_SIZE:
+        if right_sq[0] == -SQUARE_SIZE or right_sq[1] == -SQUARE_SIZE or right_sq[0] == WINDOW_X or right_sq[1] == WINDOW_Y:
             self.game_status.danger_right = 1
             
-        if left_sq[0] == -SQUARE_SIZE or left_sq[1] == -SQUARE_SIZE or left_sq[0] == WINDOW_X-SQUARE_SIZE or left_sq[1] == WINDOW_Y-SQUARE_SIZE:
+        if left_sq[0] == -SQUARE_SIZE or left_sq[1] == -SQUARE_SIZE or left_sq[0] == WINDOW_X or left_sq[1] == WINDOW_Y:
             self.game_status.danger_left = 1
             
         #Check if danger is itself
@@ -126,12 +128,26 @@ class SnakeGame:
             self.game_status.danger_left = 1
         except ValueError:
             pass
-           
 
-        print("Danger ahead_sq is ", self.game_status.danger_ahead_sq)
-        print("Danger right is ", self.game_status.danger_right)
-        print("Danger left is ", self.game_status.danger_left)
-        print()
+        if self.snake_direction == direction.RIGHT:   
+            self.game_status.direction_right = 1
+        elif self.snake_direction == direction.DOWN:   
+            self.game_status.direction_down = 1
+        elif self.snake_direction == direction.LEFT:   
+            self.game_status.direction_left = 1
+        elif self.snake_direction == direction.UP:   
+            self.game_status.direction_up = 1
+        
+        if self.apple_x > curr_head[0]:
+            self.game_status.food_direction_right = 1
+        if self.apple_x < curr_head[0]:
+            self.game_status.food_direction_left = 1
+        if self.apple_y > curr_head[1]:
+            self.game_status.food_direction_down = 1
+        if self.apple_y < curr_head[1]:
+            self.game_status.food_direction_up = 1
+
+        print("Danger left: ", self.game_status.danger_left)
 
 
     #Function to randomly create food
@@ -203,7 +219,7 @@ class SnakeGame:
             self.create_food()
             self.snake_do_mov = False
 
-
+        #Performs movement
         if self.snake_do_mov:
             #Check if wall hit; if not, pop tail and push head
             if self.snake_direction==direction.RIGHT:
@@ -243,7 +259,6 @@ class SnakeGame:
                     self.snake_body.pop()
                     self.snake_body.insert(0, (self.snake_body[0][0],self.snake_body[0][1]-SQUARE_SIZE))
 
-        #Performs movement
         #Draws every square of the snake
         i=0
         for (a,b) in self.snake_body:
@@ -257,10 +272,6 @@ class SnakeGame:
         score_str = "Current score: %d" %self.score
         text_surface = my_font.render(score_str, False, BLUE)
         dis.blit(text_surface,(0,0))
-
-        #Update window
-        pygame.display.update()
-        clock.tick(DIFFICULTY)
 
         return self.reward, self.done, self.score
 
@@ -278,6 +289,9 @@ my_snake = SnakeGame()
 my_snake.res_init()
 while True:
     my_snake.status_eval()
+    #Update window
+    pygame.display.update()
+    clock.tick(DIFFICULTY)
     my_snake.play_step(0)
 
 pygame.quit()
