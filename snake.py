@@ -25,6 +25,21 @@ class direction(Enum):
     LEFT = 2
     UP = 3
 
+class status():
+    direction_right = 0
+    direction_down = 0
+    direction_left = 0
+    direction_up = 0
+
+    food_direction_right = 0
+    food_direction_down = 0
+    food_direction_left = 0
+    food_direction_up = 0
+
+    danger_right = 0
+    danger_down = 0
+    danger_left = 0
+    danger_up = 0
 
 class SnakeGame:
     #Snake variables
@@ -37,6 +52,7 @@ class SnakeGame:
     #Game variables
     score = 0
     controller = 0  #0: Keyboard controlled, 1: Automatic controlled. Never updated after init
+    game_status = status()
 
     #Apple variables
     apple_eaten = False
@@ -133,41 +149,45 @@ class SnakeGame:
 
 
         if self.snake_do_mov:
-            #Performs movement
+            #Check if wall hit; if not, pop tail and push head
             if self.snake_direction==direction.RIGHT:
                 if self.snake_body[self.snake_curr_head][0]==(WINDOW_X/SQUARE_SIZE-1)*SQUARE_SIZE:
                     self.reward = self.reward - 10
                     aux = self.score
                     self.res_init()
                     return aux
-                self.snake_body.pop()
-                self.snake_body.insert(0, (self.snake_body[0][0]+SQUARE_SIZE,self.snake_body[0][1]))
+                else:    
+                    self.snake_body.pop()
+                    self.snake_body.insert(0, (self.snake_body[0][0]+SQUARE_SIZE,self.snake_body[0][1]))
             elif self.snake_direction==direction.DOWN:
                 if self.snake_body[self.snake_curr_head][1]==(WINDOW_Y/SQUARE_SIZE-1)*SQUARE_SIZE:
                     self.reward = self.reward - 10
                     aux = self.score
                     self.res_init()
                     return aux
-                self.snake_body.pop()
-                self.snake_body.insert(0, (self.snake_body[0][0],self.snake_body[0][1]+SQUARE_SIZE))
+                else:
+                    self.snake_body.pop()
+                    self.snake_body.insert(0, (self.snake_body[0][0],self.snake_body[0][1]+SQUARE_SIZE))
             elif self.snake_direction==direction.LEFT:
                 if self.snake_body[self.snake_curr_head][0]==0:    
                     self.reward = self.reward - 10
                     aux = self.score
                     self.res_init()
                     return aux
-                self.snake_body.pop()
-                self.snake_body.insert(0, (self.snake_body[0][0]-SQUARE_SIZE,self.snake_body[0][1]))
+                else:
+                    self.snake_body.pop()
+                    self.snake_body.insert(0, (self.snake_body[0][0]-SQUARE_SIZE,self.snake_body[0][1]))
             elif self.snake_direction==direction.UP:
                 if self.snake_body[self.snake_curr_head][1]==0:    
                     self.reward = self.reward - 10
                     aux = self.score
                     self.res_init()
                     return aux
-                self.snake_body.pop()
-                self.snake_body.insert(0, (self.snake_body[0][0],self.snake_body[0][1]-SQUARE_SIZE))
+                else:
+                    self.snake_body.pop()
+                    self.snake_body.insert(0, (self.snake_body[0][0],self.snake_body[0][1]-SQUARE_SIZE))
 
-
+        #Performs movement
         #Draws every square of the snake
         i=0
         for (a,b) in self.snake_body:
@@ -182,12 +202,17 @@ class SnakeGame:
         text_surface = my_font.render(score_str, False, BLUE)
         dis.blit(text_surface,(0,0))
 
+        #Update window
         pygame.display.update()
         clock.tick(DIFFICULTY)
 
+        #Console output
         print("Reward is: ", self.reward)
 
-        return self.reward ,self.done, self.score
+        return self.reward, self.done, self.score
+
+
+
 
 
 #Init window
@@ -200,7 +225,6 @@ my_font = pygame.font.SysFont('Comic Sans MS', 30)
 clock=pygame.time.Clock()
 
 my_snake = SnakeGame()
-
 my_snake.res_init()
 while True:
     my_snake.play_step(0)
