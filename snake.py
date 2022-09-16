@@ -17,7 +17,7 @@ WINDOW_X=800
 WINDOW_Y=800
 
 #Lower value, easier game
-DIFFICULTY=10
+DIFFICULTY = 10
 
 class direction(Enum):
     RIGHT = 0
@@ -36,10 +36,9 @@ class status():
     food_direction_left = 0
     food_direction_up = 0
 
+    danger_ahead_sq = 0
     danger_right = 0
-    danger_down = 0
     danger_left = 0
-    danger_up = 0
 
 class SnakeGame:
     #Snake variables
@@ -63,7 +62,6 @@ class SnakeGame:
     reward  = 0
     done = False
 
-
     #Reset function
     def res_init(self):
         dis.fill(WHITE)
@@ -76,6 +74,65 @@ class SnakeGame:
         self.snake_do_mov = True
         self.snake_direction = direction.RIGHT
         self.create_food()
+
+    #Evaluate status function
+    def status_eval(self):
+        #Reset status
+        self.game_status = status()
+
+        (x, y) = self.snake_body[self.snake_curr_head]
+
+        #Calculate squares close to the head
+        if self.snake_direction==direction.RIGHT:
+            ahead_sq = (x+SQUARE_SIZE, y)
+            right_sq = (x, y+SQUARE_SIZE)
+            left_sq = (x, y-SQUARE_SIZE)
+        elif self.snake_direction==direction.DOWN:
+            ahead_sq = (x, y+SQUARE_SIZE)
+            right_sq = (x-SQUARE_SIZE, y)
+            left_sq = (x+SQUARE_SIZE, y)
+        elif self.snake_direction==direction.LEFT:
+            ahead_sq = (x-SQUARE_SIZE, y)
+            right_sq = (x, y-SQUARE_SIZE)
+            left_sq = (x, y+SQUARE_SIZE)
+        elif self.snake_direction==direction.UP:
+            ahead_sq = (x, y-SQUARE_SIZE)
+            right_sq = (x+SQUARE_SIZE, y)
+            left_sq = (x-SQUARE_SIZE, y)
+
+        #Check if danger is wall
+        if ahead_sq[0] == -SQUARE_SIZE or ahead_sq[1] == -SQUARE_SIZE or ahead_sq[0] == WINDOW_X-SQUARE_SIZE or ahead_sq[1] == WINDOW_Y-SQUARE_SIZE:
+            self.game_status.danger_ahead_sq = 1
+
+        if right_sq[0] == -SQUARE_SIZE or right_sq[1] == -SQUARE_SIZE or right_sq[0] == WINDOW_X-SQUARE_SIZE or right_sq[1] == WINDOW_Y-SQUARE_SIZE:
+            self.game_status.danger_right = 1
+            
+        if left_sq[0] == -SQUARE_SIZE or left_sq[1] == -SQUARE_SIZE or left_sq[0] == WINDOW_X-SQUARE_SIZE or left_sq[1] == WINDOW_Y-SQUARE_SIZE:
+            self.game_status.danger_left = 1
+            
+        #Check if danger is itself
+        try:
+            self.snake_body.index(ahead_sq, 1, self.snake_body_len)
+            self.game_status.danger_ahead_sq = 1
+        except ValueError:
+            pass
+        try:
+            self.snake_body.index(right_sq, 1, self.snake_body_len)
+            self.game_status.danger_right = 1
+        except ValueError:
+            pass
+        try:
+            self.snake_body.index(left_sq, 1, self.snake_body_len)
+            self.game_status.danger_left = 1
+        except ValueError:
+            pass
+           
+
+        print("Danger ahead_sq is ", self.game_status.danger_ahead_sq)
+        print("Danger right is ", self.game_status.danger_right)
+        print("Danger left is ", self.game_status.danger_left)
+        print()
+
 
     #Function to randomly create food
     def create_food(self):
@@ -100,7 +157,6 @@ class SnakeGame:
         self.score = self.snake_body_len
 
     #Single loop iteration
-    #Action param used only if controlled by computer, not keyboard
     def play_step(self, action):
         #Clear display
         dis.fill(WHITE)
@@ -206,13 +262,7 @@ class SnakeGame:
         pygame.display.update()
         clock.tick(DIFFICULTY)
 
-        #Console output
-        print("Reward is: ", self.reward)
-
         return self.reward, self.done, self.score
-
-
-
 
 
 #Init window
@@ -227,6 +277,7 @@ clock=pygame.time.Clock()
 my_snake = SnakeGame()
 my_snake.res_init()
 while True:
+    my_snake.status_eval()
     my_snake.play_step(0)
 
 pygame.quit()
