@@ -4,6 +4,7 @@ import pygame
 #Faccio codesta prova
 #Riproviamo a moddare
 
+
 RED=(255,0,0)
 GREEN=(0,255,0)
 BLUE=(0,0,255)
@@ -108,7 +109,7 @@ class SnakeGame:
             if f!=0:
                 self.reward = self.reward - 10
                 aux = self.score
-                self.res_init(self)
+                self.res_init()
                 return aux
         except ValueError:
             pass
