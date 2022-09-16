@@ -1,3 +1,4 @@
+from enum import Enum
 import random
 import pygame
 
@@ -18,17 +19,27 @@ WINDOW_Y=800
 #Lower value, easier game
 DIFFICULTY=10
 
+class direction(Enum):
+    RIGHT = 0
+    DOWN = 1
+    LEFT = 2
+    UP = 3
+
+
 class SnakeGame:
     #Snake variables
     snake_body = []
-    body_len = 0
+    snake_body_len = 0
+    snake_curr_head = 0   #Array index of snake's head
+    snake_do_mov = False  #If snake has eaten apple, it doesn't need to move: head grows towards eaten apple
+    snake_direction = direction.RIGHT
+
+    #Game variables
     score = 0
-    curr_head = 0
-    do_mov = False
-    direction = 0
+    controller = 0  #0: Keyboard controlled, 1: Automatic controlled. Never updated after init
 
     #Apple variables
-    eaten = False
+    apple_eaten = False
     apple_x = 0
     apple_y = 0
 
@@ -39,21 +50,15 @@ class SnakeGame:
 
     #Reset function
     def res_init(self):
-        #global snake_body,body_len,score,curr_head,eaten,do_mov,direction
-        #global apple_x,apple_y,reward
         dis.fill(WHITE)
         self.snake_body = [(SQUARE_SIZE,0), (0,0)]
-        self.body_len = len(self.snake_body)
-        self.score = self.body_len
-        self.curr_head = 0
-        self.eaten = True
+        self.snake_body_len = len(self.snake_body)
+        self.score = self.snake_body_len
+        self.snake_curr_head = 0
+        self.apple_eaten = True
         #reward doesn't have to be reset to 0
-        self.do_mov = True
-        #0 RIGHT
-        #1 DOWN
-        #2 LEFT
-        #3 UP
-        self.direction = 0
+        self.snake_do_mov = True
+        self.snake_direction = direction.RIGHT
         self.create_food()
 
     #Function to randomly create food
@@ -68,47 +73,48 @@ class SnakeGame:
                 y = random.randrange(0,WINDOW_X/SQUARE_SIZE-1)*SQUARE_SIZE
             except ValueError:
                 f=0    
-        self.eaten=False
+        self.apple_eaten = False
         self.apple_x = x
         self.apple_y = y
 
     #Function for growing
     def grow(self):
-        self.snake_body.insert(0,(self.apple_x,self.apple_y))
-        self.body_len = len(self.snake_body)
-        self.score = self.body_len
+        self.snake_body.insert(0,(self.apple_x,self.apple_y))   #Head grows towards eaten apple
+        self.snake_body_len = len(self.snake_body)
+        self.score = self.snake_body_len
 
     #Single loop iteration
-    #action param used only if controlled by computer, not keyboard
+    #Action param used only if controlled by computer, not keyboard
     def play_step(self, action):
         #Clear display
         dis.fill(WHITE)
 
         #Setup flag
-        self.do_mov = True
+        self.snake_do_mov = True
 
         for event in pygame.event.get():
             if event.type==pygame.QUIT:
                 pygame.quit()
                 quit()
-            if event.type==pygame.KEYDOWN:
-                if event.key==pygame.K_RIGHT:
-                    if self.direction==1 or self.direction==3:
-                        self.direction = 0
-                elif event.key==pygame.K_LEFT:
-                    if self.direction==1 or self.direction==3:
-                        self.direction = 2
-                elif event.key==pygame.K_UP:
-                    if self.direction==0 or self.direction==2:
-                        self.direction = 3
-                elif event.key==pygame.K_DOWN:
-                    if self.direction==0 or self.direction==2:
-                        self.direction = 1
-                break
+            if self.controller == 0:
+                if event.type==pygame.KEYDOWN:
+                    if event.key==pygame.K_RIGHT:
+                        if self.snake_direction==direction.DOWN or self.snake_direction==direction.UP:
+                            self.snake_direction = direction.RIGHT
+                    elif event.key==pygame.K_LEFT:
+                        if self.snake_direction==direction.DOWN or self.snake_direction==direction.UP:
+                            self.snake_direction = direction.LEFT
+                    elif event.key==pygame.K_UP:
+                        if self.snake_direction==direction.RIGHT or self.snake_direction==direction.LEFT:
+                            self.snake_direction = direction.UP
+                    elif event.key==pygame.K_DOWN:
+                        if self.snake_direction==direction.RIGHT or self.snake_direction==direction.LEFT:
+                            self.snake_direction = direction.DOWN
+                    break
 
         #Check if head appears twice: biting itself
         try :
-            f = self.snake_body.index(self.snake_body[0], 1, self.body_len)
+            f = self.snake_body.index(self.snake_body[0], 1, self.snake_body_len)
             if f!=0:
                 self.reward = self.reward - 10
                 aux = self.score
@@ -118,42 +124,42 @@ class SnakeGame:
             pass
 
         #Checks if apple eaten
-        if (self.snake_body[0][0]==self.apple_x-SQUARE_SIZE and self.snake_body[0][1]==self.apple_y and self.direction==0) or (self.snake_body[0][1]==self.apple_y-SQUARE_SIZE and self.snake_body[0][0]==self.apple_x and  self.direction==1) or (self.snake_body[0][0]==self.apple_x+SQUARE_SIZE and self.snake_body[0][1]==self.apple_y and  self.direction==2) or (self.snake_body[0][1]==self.apple_y+SQUARE_SIZE and self.snake_body[0][0]==self.apple_x and  self.direction==3):
-            self.eaten = True
+        if (self.snake_body[0][0]==self.apple_x-SQUARE_SIZE and self.snake_body[0][1]==self.apple_y and self.snake_direction==direction.RIGHT) or (self.snake_body[0][1]==self.apple_y-SQUARE_SIZE and self.snake_body[0][0]==self.apple_x and  self.snake_direction==direction.DOWN) or (self.snake_body[0][0]==self.apple_x+SQUARE_SIZE and self.snake_body[0][1]==self.apple_y and  self.snake_direction==direction.LEFT) or (self.snake_body[0][1]==self.apple_y+SQUARE_SIZE and self.snake_body[0][0]==self.apple_x and  self.snake_direction==direction.UP):
+            self.apple_eaten = True
             self.reward = self.reward + 10
             self.grow()
             self.create_food()
-            self.do_mov = False
+            self.snake_do_mov = False
 
 
-        if self.do_mov:
+        if self.snake_do_mov:
             #Performs movement
-            if self.direction==0:
-                if self.snake_body[self.curr_head][0]==(WINDOW_X/SQUARE_SIZE-1)*SQUARE_SIZE:
+            if self.snake_direction==direction.RIGHT:
+                if self.snake_body[self.snake_curr_head][0]==(WINDOW_X/SQUARE_SIZE-1)*SQUARE_SIZE:
                     self.reward = self.reward - 10
                     aux = self.score
                     self.res_init()
                     return aux
                 self.snake_body.pop()
                 self.snake_body.insert(0, (self.snake_body[0][0]+SQUARE_SIZE,self.snake_body[0][1]))
-            elif self.direction==1:
-                if self.snake_body[self.curr_head][1]==(WINDOW_Y/SQUARE_SIZE-1)*SQUARE_SIZE:
+            elif self.snake_direction==direction.DOWN:
+                if self.snake_body[self.snake_curr_head][1]==(WINDOW_Y/SQUARE_SIZE-1)*SQUARE_SIZE:
                     self.reward = self.reward - 10
                     aux = self.score
                     self.res_init()
                     return aux
                 self.snake_body.pop()
                 self.snake_body.insert(0, (self.snake_body[0][0],self.snake_body[0][1]+SQUARE_SIZE))
-            elif self.direction==2:
-                if self.snake_body[self.curr_head][0]==0:    
+            elif self.snake_direction==direction.LEFT:
+                if self.snake_body[self.snake_curr_head][0]==0:    
                     self.reward = self.reward - 10
                     aux = self.score
                     self.res_init()
                     return aux
                 self.snake_body.pop()
                 self.snake_body.insert(0, (self.snake_body[0][0]-SQUARE_SIZE,self.snake_body[0][1]))
-            elif self.direction==3:
-                if self.snake_body[self.curr_head][1]==0:    
+            elif self.snake_direction==direction.UP:
+                if self.snake_body[self.snake_curr_head][1]==0:    
                     self.reward = self.reward - 10
                     aux = self.score
                     self.res_init()
