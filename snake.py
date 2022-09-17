@@ -50,7 +50,7 @@ class SnakeGame:
 
     #Game variables
     score = 0
-    controller = 0  #0: Keyboard controlled, 1: Automatic controlled. Never updated after init
+    controller = 1  #0: Keyboard controlled, 1: Automatic controlled. Never updated after init
     game_status = status()
 
     #Apple variables
@@ -197,6 +197,8 @@ class SnakeGame:
                         if self.snake_direction==direction.RIGHT or self.snake_direction==direction.LEFT:
                             self.snake_direction = direction.DOWN
                     break
+            elif self.controller == 1:
+                pass
 
         #Check if head appears twice: biting itself
         try :
@@ -275,22 +277,60 @@ class SnakeGame:
 
 
 class NeuralNetwork():
-    #(value, bias)
-    in_neurons = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    hidden_neurons = [(0, 0), (0, 0), (0, 0), (0, 0)]
-    out_neurons = [(0, 0), (0, 0), (0, 0), (0, 0)]
+    in_neurons_value = [0]*12
+    hidden_neurons_value = [0]*4
+    hidden_neurons_bias = [0]*4
+    out_neurons_value = [0]*4
+    out_neurons_bias = [0]*4
 
     weights_first = [[0]*12]*4      #[4][12]
     weights_second = [[0]*4]*4
 
+    def print_network(self):
+        to_print = ""
+        to_print1 = ""
+        to_print = to_print + "in_neurons_value "
+        for i in range(0, 12, 1):
+            to_print = to_print + str(self.in_neurons_value[i]) + " "
+        print(to_print)
+
+        to_print = ""
+        to_print1 = ""
+        to_print = to_print + "hidden_neurons_value "
+        to_print1 = to_print1 + "hidden_neurons_bias "
+        for i in range(0, 4, 1):
+            to_print = to_print + str(self.hidden_neurons_value[i]) + " "
+            to_print1 = to_print1 + str(self.hidden_neurons_bias[i]) + " "
+        print(to_print)
+        print(to_print1)
+
+        to_print = ""
+        to_print1 = ""
+        to_print = to_print + "out_neurons_value "
+        to_print1 = to_print1 + "out_neurons_bias "
+        for i in range(0, 4, 1):
+            to_print = to_print + str(self.out_neurons_value[i]) + " "
+            to_print1 = to_print1 + str(self.out_neurons_bias[i]) + " "
+        print(to_print)
+        print(to_print1)
+
+        for i in range(0, 4, 1):
+            for j in range(0, 12, 1):
+                
+
+
     #Called once at the start
     def _randomize(self):
         for i in range(0, 12, 1):
-            self.in_neurons[i] = (random.randrange(0, 2, 1))
+            self.in_neurons_value[i] = random.randrange(0, 2, 1)
+
         for i in range(0, 4, 1):
-            self.hidden_neurons[i] = (random.randrange(0, 2, 1), random.randrange(-1, 2, 1))
+            self.hidden_neurons_value[i] = random.randrange(0, 2, 1)
+            self.hidden_neurons_bias[i] = random.randrange(-100, 101, 1)*0.01
+
         for i in range(0, 4, 1):
-            self.out_neurons[i] = (random.randrange(0, 2, 1), random.randrange(-1, 2, 1))
+            self.out_neurons_value[i] = random.randrange(0, 2, 1)
+            self.out_neurons_bias[i] = random.randrange(-100, 101, 1)*0.01
 
         for i in range(0, 4, 1):
             for j in range(0, 12, 1):
@@ -300,14 +340,35 @@ class NeuralNetwork():
             for j in range(0, 4, 1):
                 self.weights_second[i][j] = random.randrange(-100, 101, 1)*0.01
 
+    def feed_forward(self):
+        #First feed-forward
+        curr = 0
+        for i in range(0, 4, 1):
+            for j in range(0, 12, 1):
+                curr = curr + self.weights_first[i][j] * self.in_neurons_value[j]
+            if curr > self.hidden_neurons_bias[i]:
+                self.hidden_neurons_value[i] = 1
+            else: 
+                self.hidden_neurons_value[i] = 0
+            curr = 0
+        #Second feed-forward
+        for i in range(0, 4, 1):
+            for j in range(0, 4, 1):
+                curr = curr + self.weights_second[i][j] * self.hidden_neurons_value[j]
+            if curr > self.out_neurons_bias[i]:
+                self.out_neurons_value[i] = 1
+            else:
+                self.out_neurons_value[i] = 0
+            curr = 0
+
 #Init window
 pygame.init()
-dis=pygame.display.set_mode((WINDOW_X,WINDOW_Y))
+dis = pygame.display.set_mode((WINDOW_X,WINDOW_Y))
 
 #Init fonts
 pygame.font.init()
 my_font = pygame.font.SysFont('Comic Sans MS', 30)
-clock=pygame.time.Clock()
+clock = pygame.time.Clock()
 
 #Init snake
 my_snake = SnakeGame()
@@ -316,6 +377,15 @@ my_snake.res_init()
 #Init neural network
 my_neural_network = NeuralNetwork()
 my_neural_network._randomize()
+print("Rete neurale prima del feed forward:")
+print()
+my_neural_network.print_network()
+print()
+print("Rete neurale dopo il feed forward:")
+print()
+my_neural_network.feed_forward()
+my_neural_network.print_network()
+
 
 while True:
     my_snake.status_eval()
