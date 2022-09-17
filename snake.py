@@ -280,7 +280,7 @@ class NeuralNetwork():
     hidden_neurons = [(0, 0), (0, 0), (0, 0), (0, 0)]
     out_neurons = [(0, 0), (0, 0), (0, 0), (0, 0)]
 
-    weights_first = [[0]*12]*4
+    weights_first = [[0]*12]*4      #[4][12]
     weights_second = [[0]*4]*4
 
     #Called once at the start
@@ -298,7 +298,7 @@ class NeuralNetwork():
 
         for i in range(0, 4, 1):
             for j in range(0, 4, 1):
-                self.weights_second[i][j] = random.randrange(-100, 101, 1)*0.01 
+                self.weights_second[i][j] = random.randrange(-100, 101, 1)*0.01
 
 #Init window
 pygame.init()
