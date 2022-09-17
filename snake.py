@@ -84,7 +84,7 @@ class SnakeGame:
         (x, y) = self.snake_body[self.snake_curr_head]
         curr_head = (x, y)
 
-        #Calculate squares close to the head
+        #Calculate the 3 squares close to the head
         if self.snake_direction==direction.RIGHT:
             ahead_sq = (x+SQUARE_SIZE, y)
             right_sq = (x, y+SQUARE_SIZE)
@@ -276,35 +276,29 @@ class SnakeGame:
 
 class NeuralNetwork():
     #(value, bias)
-    in_neurons = [0]*12
-    hidden_neurons = [(0, 0)]*4
-    out_neurons = [(0, 0)]*4
+    in_neurons = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    hidden_neurons = [(0, 0), (0, 0), (0, 0), (0, 0)]
+    out_neurons = [(0, 0), (0, 0), (0, 0), (0, 0)]
 
-    weights_first = [0][0]
-    weights_second = [0][0]
+    weights_first = [[0]*12]*4
+    weights_second = [[0]*4]*4
 
     #Called once at the start
     def _randomize(self):
-        for i in self.in_neurons:
-            self.in_neurons = (random.randrange(0, 1))
-        for i in self.hidden_neurons:
-            self.hidden_neurons = (random.randrange(0, 1), random.randrange(-1, 1))
-        for i in self.out_neurons:
-            self.out_neurons = (random.randrange(0, 1), random.randrange(-1, 1))
-        
-        for i in self.weights_first[i]:
-            for j in self.weights_first[i][j]:
-                self.weights_first[i][j] = random.randrange(-1, 1)
+        for i in range(0, 12, 1):
+            self.in_neurons[i] = (random.randrange(0, 2, 1))
+        for i in range(0, 4, 1):
+            self.hidden_neurons[i] = (random.randrange(0, 2, 1), random.randrange(-1, 2, 1))
+        for i in range(0, 4, 1):
+            self.out_neurons[i] = (random.randrange(0, 2, 1), random.randrange(-1, 2, 1))
 
-        for i in self.weights_second[i]:
-            for j in self.weights_second[i][j]:
-                self.weights_second[i][j] = random.randrange(-1, 1)
-        
-        
+        for i in range(0, 4, 1):
+            for j in range(0, 12, 1):
+                self.weights_first[i][j] = random.randrange(-100, 101, 1)*0.01
 
-
-
-
+        for i in range(0, 4, 1):
+            for j in range(0, 4, 1):
+                self.weights_second[i][j] = random.randrange(-100, 101, 1)*0.01 
 
 #Init window
 pygame.init()
