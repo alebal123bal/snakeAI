@@ -1,6 +1,7 @@
 from enum import Enum
 import random
 import pygame
+import numpy
 
 #Faccio codesta prova
 #Riproviamo a moddare
@@ -150,8 +151,8 @@ class SnakeGame:
 
     #Function to randomly create food
     def create_food(self):
-        x = random.randrange(0,WINDOW_X/SQUARE_SIZE-1)*SQUARE_SIZE
-        y = random.randrange(0,WINDOW_X/SQUARE_SIZE-1)*SQUARE_SIZE
+        x = random.randrange(0,int(WINDOW_X/SQUARE_SIZE)-1)*SQUARE_SIZE
+        y = random.randrange(0,int(WINDOW_X/SQUARE_SIZE)-1)*SQUARE_SIZE
         f=1
         while f!=0:
             try:
@@ -286,59 +287,30 @@ class NeuralNetwork():
     weights_first = [[0]*12]*4      #[4][12]
     weights_second = [[0]*4]*4
 
-    def print_network(self):
-        to_print = ""
-        to_print1 = ""
-        to_print = to_print + "in_neurons_value "
-        for i in range(0, 12, 1):
-            to_print = to_print + str(self.in_neurons_value[i]) + " "
-        print(to_print)
+    def print_network(self):            
+        print("in_neurons_value: ", numpy.array(self.in_neurons_value))
+        print("hidden_neurons_value: ", numpy.array(self.hidden_neurons_value))
+        print("hidden_neurons_bias: ", numpy.array(self.hidden_neurons_bias))
+        print("out_neurons_value: ", numpy.array(self.out_neurons_value))
+        print("out_neurons_bias: ", numpy.array(self.out_neurons_bias))
+        print("weights_first: \n", numpy.matrix(self.weights_first))
+        print("weights_second: \n", numpy.matrix(self.weights_second))
 
-        to_print = ""
-        to_print1 = ""
-        to_print = to_print + "hidden_neurons_value "
-        to_print1 = to_print1 + "hidden_neurons_bias "
-        for i in range(0, 4, 1):
-            to_print = to_print + str(self.hidden_neurons_value[i]) + " "
-            to_print1 = to_print1 + str(self.hidden_neurons_bias[i]) + " "
-        print(to_print)
-        print(to_print1)
-
-        to_print = ""
-        to_print1 = ""
-        to_print = to_print + "out_neurons_value "
-        to_print1 = to_print1 + "out_neurons_bias "
-        for i in range(0, 4, 1):
-            to_print = to_print + str(self.out_neurons_value[i]) + " "
-            to_print1 = to_print1 + str(self.out_neurons_bias[i]) + " "
-        print(to_print)
-        print(to_print1)
-
-        for i in range(0, 4, 1):
-            for j in range(0, 12, 1):
-                
 
 
     #Called once at the start
-    def _randomize(self):
-        for i in range(0, 12, 1):
-            self.in_neurons_value[i] = random.randrange(0, 2, 1)
+    def randomize(self):
+        self.in_neurons_value = numpy.random.randint(0, 2, 12)
 
-        for i in range(0, 4, 1):
-            self.hidden_neurons_value[i] = random.randrange(0, 2, 1)
-            self.hidden_neurons_bias[i] = random.randrange(-100, 101, 1)*0.01
+        self.hidden_neurons_value = numpy.random.randint(0, 2, 4)
+        self.hidden_neurons_bias = numpy.random.randint(0, 101, 4)*0.01
 
-        for i in range(0, 4, 1):
-            self.out_neurons_value[i] = random.randrange(0, 2, 1)
-            self.out_neurons_bias[i] = random.randrange(-100, 101, 1)*0.01
+        self.out_neurons_value = numpy.random.randint(0, 2, 4)
+        self.out_neurons_bias = numpy.random.randint(0, 101, 4)*0.01
 
-        for i in range(0, 4, 1):
-            for j in range(0, 12, 1):
-                self.weights_first[i][j] = random.randrange(-100, 101, 1)*0.01
+        self.weights_first = numpy.random.randint(-100, 101, size = (4, 12))*0.01
 
-        for i in range(0, 4, 1):
-            for j in range(0, 4, 1):
-                self.weights_second[i][j] = random.randrange(-100, 101, 1)*0.01
+        self.weights_second = numpy.random.randint(-100, 101, size = (4, 4))*0.01
 
     def feed_forward(self):
         #First feed-forward
@@ -376,15 +348,16 @@ my_snake.res_init()
 
 #Init neural network
 my_neural_network = NeuralNetwork()
-my_neural_network._randomize()
+my_neural_network.randomize()
+print()
 print("Rete neurale prima del feed forward:")
 print()
 my_neural_network.print_network()
-print()
-print("Rete neurale dopo il feed forward:")
-print()
-my_neural_network.feed_forward()
-my_neural_network.print_network()
+#print()
+#print("Rete neurale dopo il feed forward:")
+#print()
+#my_neural_network.feed_forward()
+#my_neural_network.print_network()
 
 
 while True:
