@@ -1,3 +1,4 @@
+from distutils.command.build_scripts import first_line_re
 from enum import Enum
 import random
 import pygame
@@ -14,7 +15,7 @@ WINDOW_X=800
 WINDOW_Y=800
 
 #Lower value, easier game
-DIFFICULTY = 1
+DIFFICULTY = 1000
 
 class direction(Enum):
     RIGHT = 0
@@ -37,6 +38,10 @@ class status():
     danger_right = 0
     danger_left = 0
 
+class controller(Enum):
+    USER = 0
+    MACHINE = 1
+
 class SnakeGame:
     #Snake variables
     snake_body = []
@@ -47,7 +52,7 @@ class SnakeGame:
 
     #Game variables
     score = 0
-    controller = 1  #0: Keyboard controlled, 1: Automatic controlled. Never updated after init
+    controller = controller.MACHINE  #0: Keyboard controlled, 1: Automatic controlled. Never updated after init
     game_status = status()
 
     #Apple variables
@@ -68,7 +73,7 @@ class SnakeGame:
         self.apple_eaten = True
         self.snake_do_mov = True
         self.snake_direction = direction.RIGHT
-        self.create_food()
+        self.__create_food()
 
     #Evaluate status function
     def status_eval(self):
@@ -156,7 +161,7 @@ class SnakeGame:
 
 
     #Function to randomly create food
-    def create_food(self):
+    def __create_food(self):
         x = random.randrange(0,int(WINDOW_X/SQUARE_SIZE)-1)*SQUARE_SIZE
         y = random.randrange(0,int(WINDOW_X/SQUARE_SIZE)-1)*SQUARE_SIZE
         f=1
@@ -172,24 +177,43 @@ class SnakeGame:
         self.apple_y = y
 
     #Function for growing
-    def grow(self):
+    def __grow(self):
         self.snake_body.insert(0,(self.apple_x,self.apple_y))   #Head grows towards eaten apple
         self.snake_body_len = len(self.snake_body)
         self.score = self.snake_body_len
 
-    #Single loop iteration
-    def play_step(self, action):
-        #Clear display
+    def __clear_display(self, dis):
         dis.fill(WHITE)
 
-        #Setup flag
+    def __print_everything(self, dis, font_source, neural_network, highest_score):
+        i=0
+        for (a,b) in self.snake_body:
+            pygame.draw.rect(dis,GREEN,[self.snake_body[i][0],self.snake_body[i][1],SQUARE_SIZE,SQUARE_SIZE])
+            i=i+1
+
+        pygame.draw.rect(dis,RED,[self.apple_x,self.apple_y,SQUARE_SIZE,SQUARE_SIZE])
+
+        first_line = font_source.render("Highest score: "+ str(highest_score), False, BLUE)
+        second_line = font_source.render("Hidden biases: "+str(numpy.array(neural_network.hidden_neurons_bias)), False, BLUE)
+        third_line = font_source.render("Output biases: "+str(numpy.array(neural_network.out_neurons_bias)), False, BLUE)
+        dis.blit(first_line,(0,0))
+        dis.blit(second_line,(0,25))
+        dis.blit(third_line,(0,50))
+
+        pygame.display.update()
+
+    #Single loop iteration
+    def play_step(self, action, dis, font_source, neural_network, highest_score):
+        self.__clear_display(dis)
+
+        #Setup flags
         self.snake_do_mov = True
 
         for event in pygame.event.get():
             if event.type==pygame.QUIT:
                 pygame.quit()
                 quit()
-            if self.controller == 0:
+            if self.controller == controller.USER:
                 if event.type==pygame.KEYDOWN:
                     if event.key==pygame.K_RIGHT:
                         if self.snake_direction==direction.DOWN or self.snake_direction==direction.UP:
@@ -204,15 +228,17 @@ class SnakeGame:
                         if self.snake_direction==direction.RIGHT or self.snake_direction==direction.LEFT:
                             self.snake_direction = direction.DOWN
                     break
-            elif self.controller == 1:
-                if action[0] == 1:
-                    self.snake_direction = direction.RIGHT
-                elif action[1] == 1:
-                    self.snake_direction = direction.DOWN
-                elif action[2] == 1:
-                    self.snake_direction = direction.LEFT
-                elif action[3] == 1:
-                    self.snake_direction = direction.UP
+        if self.controller == controller.MACHINE:
+            if action[0] == 1 and self.snake_direction!=direction.LEFT:
+                self.snake_direction = direction.RIGHT
+            elif action[1] == 1 and self.snake_direction!=direction.UP:
+                self.snake_direction = direction.DOWN
+            elif action[2] == 1 and self.snake_direction!=direction.RIGHT:
+                self.snake_direction = direction.LEFT
+            elif action[3] == 1 and self.snake_direction!=direction.DOWN:
+                self.snake_direction = direction.UP
+            else:       #All zeros
+                pass
 
 
         #Check if head appears twice: biting itself
@@ -221,15 +247,15 @@ class SnakeGame:
             if f!=0:
                 aux = self.score
                 self.res_init()
-                return aux
+                return aux, True
         except ValueError:
             pass
 
         #Checks if apple eaten
         if (self.snake_body[0][0]==self.apple_x-SQUARE_SIZE and self.snake_body[0][1]==self.apple_y and self.snake_direction==direction.RIGHT) or (self.snake_body[0][1]==self.apple_y-SQUARE_SIZE and self.snake_body[0][0]==self.apple_x and  self.snake_direction==direction.DOWN) or (self.snake_body[0][0]==self.apple_x+SQUARE_SIZE and self.snake_body[0][1]==self.apple_y and  self.snake_direction==direction.LEFT) or (self.snake_body[0][1]==self.apple_y+SQUARE_SIZE and self.snake_body[0][0]==self.apple_x and  self.snake_direction==direction.UP):
             self.apple_eaten = True
-            self.grow()
-            self.create_food()
+            self.__grow()
+            self.__create_food()
             self.snake_do_mov = False
 
         #Performs movement
@@ -239,7 +265,7 @@ class SnakeGame:
                 if self.snake_body[self.snake_curr_head][0]==(WINDOW_X/SQUARE_SIZE-1)*SQUARE_SIZE:
                     aux = self.score
                     self.res_init()
-                    return aux
+                    return aux, True
                 else:    
                     self.snake_body.pop()
                     self.snake_body.insert(0, (self.snake_body[0][0]+SQUARE_SIZE,self.snake_body[0][1]))
@@ -247,7 +273,7 @@ class SnakeGame:
                 if self.snake_body[self.snake_curr_head][1]==(WINDOW_Y/SQUARE_SIZE-1)*SQUARE_SIZE:
                     aux = self.score
                     self.res_init()
-                    return aux
+                    return aux, True
                 else:
                     self.snake_body.pop()
                     self.snake_body.insert(0, (self.snake_body[0][0],self.snake_body[0][1]+SQUARE_SIZE))
@@ -255,7 +281,7 @@ class SnakeGame:
                 if self.snake_body[self.snake_curr_head][0]==0:
                     aux = self.score
                     self.res_init()
-                    return aux
+                    return aux, True
                 else:
                     self.snake_body.pop()
                     self.snake_body.insert(0, (self.snake_body[0][0]-SQUARE_SIZE,self.snake_body[0][1]))
@@ -263,26 +289,14 @@ class SnakeGame:
                 if self.snake_body[self.snake_curr_head][1]==0:
                     aux = self.score
                     self.res_init()
-                    return aux
+                    return aux, True
                 else:
                     self.snake_body.pop()
                     self.snake_body.insert(0, (self.snake_body[0][0],self.snake_body[0][1]-SQUARE_SIZE))
 
-        #Draws every square of the snake
-        i=0
-        for (a,b) in self.snake_body:
-            pygame.draw.rect(dis,GREEN,[self.snake_body[i][0],self.snake_body[i][1],SQUARE_SIZE,SQUARE_SIZE])
-            i=i+1
+        self.__print_everything(dis, font_source, neural_network, highest_score)
 
-        #Draws apple
-        pygame.draw.rect(dis,RED,[self.apple_x,self.apple_y,SQUARE_SIZE,SQUARE_SIZE])
-
-        #Prints score
-        score_str = "Current score: %d" %self.score
-        text_surface = my_font.render(score_str, False, BLUE)
-        dis.blit(text_surface,(0,0))
-
-        return self.score
+        return self.score, False
 
 
 class NeuralNetwork():
@@ -305,7 +319,6 @@ class NeuralNetwork():
         print("weights_second: \n", numpy.matrix(self.weights_second))
 
 
-
     #Called once at the start
     def randomize(self):
         self.in_neurons_value = numpy.random.randint(0, 2, 11)   #Non serve
@@ -315,6 +328,7 @@ class NeuralNetwork():
         self.out_neurons_bias = numpy.random.randint(0, 101, 4)*0.01
         self.weights_first = numpy.random.randint(-100, 101, size = (4, 11))*0.01
         self.weights_second = numpy.random.randint(-100, 101, size = (4, 4))*0.01
+
 
     def feed_forward(self, in_vector):
         #First feed-forward
@@ -339,13 +353,22 @@ class NeuralNetwork():
         
         return self.out_neurons_value
 
+    def mutate(self, amount):
+        self.hidden_neurons_bias += numpy.random.randint(-10, 11, size=4)*amount
+        self.out_neurons_bias += numpy.random.randint(-10, 11, size=4)*amount
+
+        self.weights_first += numpy.random.randint(-10, 11, size=(4, 11))*amount
+        self.weights_second += numpy.random.randint(-10, 11, size=(4, 4))*amount
+
+
+
 #Init window
 pygame.init()
 dis = pygame.display.set_mode((WINDOW_X,WINDOW_Y))
 
 #Init fonts
 pygame.font.init()
-my_font = pygame.font.SysFont('Comic Sans MS', 30)
+my_font = pygame.font.SysFont('Comic Sans MS', 20)
 clock = pygame.time.Clock()
 
 #Init snake
@@ -355,13 +378,57 @@ my_snake.res_init()
 #Init neural network
 my_neural_network = NeuralNetwork()
 my_neural_network.randomize()
+best_neural_network = my_neural_network
+AMOUNT = 0.001
 
+#Init highest score
+highest_score = 2
+
+#Init loop function
+game_over = False
+n_games = 0
+game_steps = 0
+
+#Exploration
+while highest_score<4:
+    curr_status = my_snake.status_eval()
+    final_move = my_neural_network.feed_forward(curr_status)
+    curr_score, game_over = my_snake.play_step(final_move, dis, my_font, my_neural_network, highest_score)
+
+    if game_over:
+        my_neural_network.randomize()
+        n_games+=1
+        game_steps = 0
+
+    if curr_score > highest_score:
+        highest_score = curr_score
+        best_neural_network = my_neural_network
+    
+    game_steps+=1
+    if game_steps>=100:
+        my_neural_network.randomize()
+        n_games+=1
+        game_steps = 0
+    clock.tick(DIFFICULTY)
+
+print("Exploration over")
+
+#Exploitation
 while True:
     curr_status = my_snake.status_eval()
-    print(numpy.array(curr_status))
-    final_move = my_neural_network.feed_forward(curr_status)
-    print(numpy.array(final_move))
-    #Update window with moves calculated last loop iteration
-    pygame.display.update()
+    final_move = best_neural_network.feed_forward(curr_status)
+    curr_score, game_over = my_snake.play_step(final_move, dis, my_font, best_neural_network, highest_score)
+    if game_over:
+        best_neural_network.mutate(AMOUNT)
+        n_games+=1
+        game_steps = 0
+
+    if n_games==2000:
+        DIFFICULTY = 10
+
+    game_steps+=1
+    if game_steps>=100:
+        best_neural_network.mutate(AMOUNT)
+        game_steps=0
+
     clock.tick(DIFFICULTY)
-    my_snake.play_step(final_move)
