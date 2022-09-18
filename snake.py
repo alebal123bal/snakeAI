@@ -14,8 +14,8 @@ SQUARE_SIZE=50
 WINDOW_X=800
 WINDOW_Y=800
 
-#Lower value, easier game
-DIFFICULTY = 1000
+#Clock ticking speed
+SPEED = 10000000
 
 class direction(Enum):
     RIGHT = 0
@@ -300,14 +300,18 @@ class SnakeGame:
 
 
 class NeuralNetwork():
-    in_neurons_value = [0]*11
-    hidden_neurons_value = [0]*11
-    hidden_neurons_bias = [0]*11
-    out_neurons_value = [0]*4
-    out_neurons_bias = [0]*4
+    IN_NEURONS_NUMBER = 11
+    HIDDEN_NEURONS_NUMBER = 140
+    OUT_NEURONS_NUMBER = 4
 
-    weights_first = [[0]*11]*11      #[11][11]
-    weights_second = [[0]*4]*11
+    in_neurons_value = [0]*IN_NEURONS_NUMBER
+    hidden_neurons_value = [0]*HIDDEN_NEURONS_NUMBER
+    hidden_neurons_bias = [0]*HIDDEN_NEURONS_NUMBER
+    out_neurons_value = [0]*OUT_NEURONS_NUMBER
+    out_neurons_bias = [0]*OUT_NEURONS_NUMBER
+
+    weights_first = [[0]*HIDDEN_NEURONS_NUMBER]*IN_NEURONS_NUMBER      #[out][in]
+    weights_second = [[0]*OUT_NEURONS_NUMBER]*HIDDEN_NEURONS_NUMBER
 
     def print_network(self):            
         print("in_neurons_value: ", numpy.array(self.in_neurons_value))
@@ -321,20 +325,22 @@ class NeuralNetwork():
 
     #Called once at the start
     def randomize(self):
-        self.in_neurons_value = numpy.random.randint(0, 2, 11)   #Non serve
-        self.hidden_neurons_value = numpy.random.randint(0, 2, 11)
-        self.hidden_neurons_bias = numpy.random.randint(0, 101, 11)*0.01
-        self.out_neurons_value = numpy.random.randint(0, 2, 4)
-        self.out_neurons_bias = numpy.random.randint(0, 101, 4)*0.01
-        self.weights_first = numpy.random.randint(-100, 101, size = (11, 11))*0.01
-        self.weights_second = numpy.random.randint(-100, 101, size = (4, 11))*0.01
+        self.in_neurons_value = numpy.random.randint(0, 2, self.IN_NEURONS_NUMBER)   #Non serve
+        self.hidden_neurons_value = numpy.random.randint(0, 2, self.HIDDEN_NEURONS_NUMBER)
+        self.hidden_neurons_bias = numpy.random.randint(0, 101, self.HIDDEN_NEURONS_NUMBER)*0.01
+        self.out_neurons_value = numpy.random.randint(0, 2, self.OUT_NEURONS_NUMBER)
+        self.out_neurons_bias = numpy.random.randint(0, 101, self.OUT_NEURONS_NUMBER)*0.01
+        self.weights_first = numpy.random.randint(-100, 101, size = (self.HIDDEN_NEURONS_NUMBER,
+         self.IN_NEURONS_NUMBER))*0.01
+        self.weights_second = numpy.random.randint(-100, 101, size = (self.OUT_NEURONS_NUMBER,
+         self.HIDDEN_NEURONS_NUMBER))*0.01
 
 
     def feed_forward(self, in_vector):
         #First feed-forward
         curr = 0
-        for i in range(0, 11):
-            for j in range(0, 11):
+        for i in range(0, self.HIDDEN_NEURONS_NUMBER):
+            for j in range(0, self.IN_NEURONS_NUMBER):
                 curr = curr + self.weights_first[i][j] * in_vector[j]
             if curr > self.hidden_neurons_bias[i]:
                 self.hidden_neurons_value[i] = 1
@@ -342,8 +348,8 @@ class NeuralNetwork():
                 self.hidden_neurons_value[i] = 0
             curr = 0
         #Second feed-forward
-        for i in range(0, 4, 1):
-            for j in range(0, 11, 1):
+        for i in range(0, self.OUT_NEURONS_NUMBER):
+            for j in range(0, self.HIDDEN_NEURONS_NUMBER):
                 curr = curr + self.weights_second[i][j] * self.hidden_neurons_value[j]
             if curr > self.out_neurons_bias[i]:
                 self.out_neurons_value[i] = 1
@@ -354,11 +360,13 @@ class NeuralNetwork():
         return self.out_neurons_value
 
     def mutate(self, amount):
-        self.hidden_neurons_bias += numpy.random.randint(-10, 11, size=11)*amount
-        self.out_neurons_bias += numpy.random.randint(-10, 11, size=1)*amount
+        self.hidden_neurons_bias += numpy.random.randint(-10, 11, size=self.HIDDEN_NEURONS_NUMBER)*amount
+        self.out_neurons_bias += numpy.random.randint(-10, 11, size=self.OUT_NEURONS_NUMBER)*amount
 
-        self.weights_first += numpy.random.randint(-10, 11, size=(11, 11))*amount
-        self.weights_second += numpy.random.randint(-10, 11, size=(4, 11))*amount
+        self.weights_first += numpy.random.randint(-10, 11, size=(self.HIDDEN_NEURONS_NUMBER,
+         self.IN_NEURONS_NUMBER))*amount
+        self.weights_second += numpy.random.randint(-10, 11, size=(self.OUT_NEURONS_NUMBER,
+         self.HIDDEN_NEURONS_NUMBER))*amount
 
 
 
@@ -379,7 +387,7 @@ my_snake.res_init()
 my_neural_network = NeuralNetwork()
 my_neural_network.randomize()
 best_neural_network = my_neural_network
-AMOUNT = 0.001
+AMOUNT = 0.0005
 
 #Init highest score
 highest_score = 2
@@ -390,7 +398,7 @@ n_games = 0
 game_steps = 0
 
 #Exploration
-while highest_score<4:
+while highest_score<6:
     curr_status = my_snake.status_eval()
     final_move = my_neural_network.feed_forward(curr_status)
     curr_score, game_over = my_snake.play_step(final_move, dis, my_font, my_neural_network, highest_score)
@@ -409,7 +417,7 @@ while highest_score<4:
         my_neural_network.randomize()
         n_games+=1
         game_steps = 0
-    clock.tick(DIFFICULTY)
+    clock.tick(SPEED)
 
 print("Exploration over")
 
@@ -423,12 +431,16 @@ while True:
         n_games+=1
         game_steps = 0
 
-    if n_games==2000:
-        DIFFICULTY = 10
+    if curr_score > highest_score:
+            highest_score = curr_score
+            AMOUNT *= 0.9
+
+    """ if n_games==10000:
+        SPEED = 10 """
 
     game_steps+=1
     if game_steps>=100:
         best_neural_network.mutate(AMOUNT)
         game_steps=0
 
-    clock.tick(DIFFICULTY)
+    clock.tick(SPEED)
