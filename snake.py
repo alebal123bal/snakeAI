@@ -301,13 +301,13 @@ class SnakeGame:
 
 class NeuralNetwork():
     in_neurons_value = [0]*11
-    hidden_neurons_value = [0]*4
-    hidden_neurons_bias = [0]*4
+    hidden_neurons_value = [0]*11
+    hidden_neurons_bias = [0]*11
     out_neurons_value = [0]*4
     out_neurons_bias = [0]*4
 
-    weights_first = [[0]*11]*4      #[4][11]
-    weights_second = [[0]*4]*4
+    weights_first = [[0]*11]*11      #[11][11]
+    weights_second = [[0]*4]*11
 
     def print_network(self):            
         print("in_neurons_value: ", numpy.array(self.in_neurons_value))
@@ -322,19 +322,19 @@ class NeuralNetwork():
     #Called once at the start
     def randomize(self):
         self.in_neurons_value = numpy.random.randint(0, 2, 11)   #Non serve
-        self.hidden_neurons_value = numpy.random.randint(0, 2, 4)
-        self.hidden_neurons_bias = numpy.random.randint(0, 101, 4)*0.01
+        self.hidden_neurons_value = numpy.random.randint(0, 2, 11)
+        self.hidden_neurons_bias = numpy.random.randint(0, 101, 11)*0.01
         self.out_neurons_value = numpy.random.randint(0, 2, 4)
         self.out_neurons_bias = numpy.random.randint(0, 101, 4)*0.01
-        self.weights_first = numpy.random.randint(-100, 101, size = (4, 11))*0.01
-        self.weights_second = numpy.random.randint(-100, 101, size = (4, 4))*0.01
+        self.weights_first = numpy.random.randint(-100, 101, size = (11, 11))*0.01
+        self.weights_second = numpy.random.randint(-100, 101, size = (4, 11))*0.01
 
 
     def feed_forward(self, in_vector):
         #First feed-forward
         curr = 0
-        for i in range(0, 4, 1):
-            for j in range(0, 11, 1):
+        for i in range(0, 11):
+            for j in range(0, 11):
                 curr = curr + self.weights_first[i][j] * in_vector[j]
             if curr > self.hidden_neurons_bias[i]:
                 self.hidden_neurons_value[i] = 1
@@ -343,7 +343,7 @@ class NeuralNetwork():
             curr = 0
         #Second feed-forward
         for i in range(0, 4, 1):
-            for j in range(0, 4, 1):
+            for j in range(0, 11, 1):
                 curr = curr + self.weights_second[i][j] * self.hidden_neurons_value[j]
             if curr > self.out_neurons_bias[i]:
                 self.out_neurons_value[i] = 1
@@ -354,11 +354,11 @@ class NeuralNetwork():
         return self.out_neurons_value
 
     def mutate(self, amount):
-        self.hidden_neurons_bias += numpy.random.randint(-10, 11, size=4)*amount
-        self.out_neurons_bias += numpy.random.randint(-10, 11, size=4)*amount
+        self.hidden_neurons_bias += numpy.random.randint(-10, 11, size=11)*amount
+        self.out_neurons_bias += numpy.random.randint(-10, 11, size=1)*amount
 
-        self.weights_first += numpy.random.randint(-10, 11, size=(4, 11))*amount
-        self.weights_second += numpy.random.randint(-10, 11, size=(4, 4))*amount
+        self.weights_first += numpy.random.randint(-10, 11, size=(11, 11))*amount
+        self.weights_second += numpy.random.randint(-10, 11, size=(4, 11))*amount
 
 
 
