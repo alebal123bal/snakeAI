@@ -303,8 +303,8 @@ class SnakeGame:
 
 class NeuralNetwork():
     IN_NEURONS_NUMBER = 11
-    HIDDEN_NEURONS_NUMBER = 3
-    SUP_NEURONS_NUMBER = 3
+    HIDDEN_NEURONS_NUMBER = 7
+    SUP_NEURONS_NUMBER = 7
     OUT_NEURONS_NUMBER = 4
 
     in_neurons_value = [0]*IN_NEURONS_NUMBER
@@ -422,7 +422,7 @@ n_games = 0
 game_steps = 0
 
 #Exploration
-while highest_score<9:
+while highest_score<5:
     curr_status = my_snake.status_eval()
     final_move = my_neural_network.feed_forward(curr_status)
     curr_score, game_over = my_snake.play_step(final_move, dis, my_font, my_neural_network, highest_score)
@@ -459,7 +459,7 @@ while True:
             highest_score = curr_score
             AMOUNT *= 0.9
 
-    if n_games==10000:
+    if n_games>=1000:
         SPEED = 10
 
     game_steps+=1
