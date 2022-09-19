@@ -10,8 +10,8 @@ WHITE=(255,255,255)
 
 #Change aspect of snake and window
 SQUARE_SIZE=50
-WINDOW_X=800
-WINDOW_Y=800
+WINDOW_X=16*SQUARE_SIZE
+WINDOW_Y=16*SQUARE_SIZE
 
 #Clock ticking speed
 SPEED = 10000000
