@@ -423,7 +423,7 @@ game_steps = 0
 
 #Init file configuration
 THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
-BEST_FILE = open(os.path.join(THIS_FOLDER, "best_NN"), 'rb')
+BEST_FILE = open(os.path.join(THIS_FOLDER, "best_NN_10_highest"), 'rb')
 
 best_neural_network = pickle.load(BEST_FILE)
 
