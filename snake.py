@@ -67,7 +67,7 @@ class SnakeGame:
     #Reset function
     def res_init(self):
         dis.fill(WHITE)
-        self.snake_body = [(1*SQUARE_SIZE, 0* SQUARE_SIZE), (0,0)]
+        self.snake_body = [(1*SQUARE_SIZE, 0*SQUARE_SIZE), (0,0)]
         self.snake_body_len = len(self.snake_body)
         self.score = self.snake_body_len
         self.snake_curr_head = 0
@@ -446,6 +446,7 @@ while highest_score<6:
     if curr_score > highest_score:
         highest_score = curr_score
         best_neural_network = my_neural_network
+        print(highest_score)
 
         BEST_FILE = open(os.path.join(THIS_FOLDER, "best_NN"), 'wb')
         pickle.dump(best_neural_network, BEST_FILE)
