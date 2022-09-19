@@ -1,3 +1,5 @@
+import pickle
+import os
 from enum import Enum
 import random
 import pygame
@@ -9,12 +11,12 @@ BLUE=(0,0,255)
 WHITE=(255,255,255)
 
 #Change aspect of snake and window
-SQUARE_SIZE=10
+SQUARE_SIZE=50
 WINDOW_X=16*SQUARE_SIZE
 WINDOW_Y=16*SQUARE_SIZE
 
 #Clock ticking speed
-SPEED = 10
+SPEED = 1000
 
 class direction(Enum):
     RIGHT = 0
@@ -65,7 +67,7 @@ class SnakeGame:
     #Reset function
     def res_init(self):
         dis.fill(WHITE)
-        self.snake_body = [(SQUARE_SIZE,0), (0,0)]
+        self.snake_body = [(1*SQUARE_SIZE, 0* SQUARE_SIZE), (0,0)]
         self.snake_body_len = len(self.snake_body)
         self.score = self.snake_body_len
         self.snake_curr_head = 0
@@ -85,30 +87,30 @@ class SnakeGame:
 
         #Calculate the 3 squares close to the head
         if self.snake_direction==direction.RIGHT:
-            ahead_sq = (x+SQUARE_SIZE, y)
-            right_sq = (x, y+SQUARE_SIZE)
-            left_sq = (x, y-SQUARE_SIZE)
+            ahead_sq = (x+1*SQUARE_SIZE, y)
+            right_sq = (x, y+1*SQUARE_SIZE)
+            left_sq = (x, y-1*SQUARE_SIZE)
         elif self.snake_direction==direction.DOWN:
-            ahead_sq = (x, y+SQUARE_SIZE)
-            right_sq = (x-SQUARE_SIZE, y)
-            left_sq = (x+SQUARE_SIZE, y)
+            ahead_sq = (x, y+1*SQUARE_SIZE)
+            right_sq = (x-1*SQUARE_SIZE, y)
+            left_sq = (x+1*SQUARE_SIZE, y)
         elif self.snake_direction==direction.LEFT:
-            ahead_sq = (x-SQUARE_SIZE, y)
-            right_sq = (x, y-SQUARE_SIZE)
-            left_sq = (x, y+SQUARE_SIZE)
+            ahead_sq = (x-1*SQUARE_SIZE, y)
+            right_sq = (x, y-1*SQUARE_SIZE)
+            left_sq = (x, y+1*SQUARE_SIZE)
         elif self.snake_direction==direction.UP:
-            ahead_sq = (x, y-SQUARE_SIZE)
-            right_sq = (x+SQUARE_SIZE, y)
-            left_sq = (x-SQUARE_SIZE, y)
+            ahead_sq = (x, y-1*SQUARE_SIZE)
+            right_sq = (x+1*SQUARE_SIZE, y)
+            left_sq = (x-1*SQUARE_SIZE, y)
 
         #Check if danger is wall
-        if ahead_sq[0] == -SQUARE_SIZE or ahead_sq[1] == -SQUARE_SIZE or ahead_sq[0] == WINDOW_X or ahead_sq[1] == WINDOW_Y:
+        if ahead_sq[0] == -1*SQUARE_SIZE or ahead_sq[1] == -1*SQUARE_SIZE or ahead_sq[0] == 16*SQUARE_SIZE or ahead_sq[1] == 16*SQUARE_SIZE:
             self.game_status.danger_ahead_sq = 1
 
-        if right_sq[0] == -SQUARE_SIZE or right_sq[1] == -SQUARE_SIZE or right_sq[0] == WINDOW_X or right_sq[1] == WINDOW_Y:
+        if right_sq[0] == -1*SQUARE_SIZE or right_sq[1] == -1*SQUARE_SIZE or right_sq[0] == 16*SQUARE_SIZE or right_sq[1] == 16*SQUARE_SIZE:
             self.game_status.danger_right = 1
             
-        if left_sq[0] == -SQUARE_SIZE or left_sq[1] == -SQUARE_SIZE or left_sq[0] == WINDOW_X or left_sq[1] == WINDOW_Y:
+        if left_sq[0] == -1*SQUARE_SIZE or left_sq[1] == -1*SQUARE_SIZE or left_sq[0] == 16*SQUARE_SIZE or left_sq[1] == 16*SQUARE_SIZE:
             self.game_status.danger_left = 1
             
         #Check if danger is itself
@@ -161,14 +163,14 @@ class SnakeGame:
 
     #Function to randomly create food
     def __create_food(self):
-        x = random.randrange(0,int(WINDOW_X/SQUARE_SIZE)-1)*SQUARE_SIZE
-        y = random.randrange(0,int(WINDOW_X/SQUARE_SIZE)-1)*SQUARE_SIZE
+        x = random.randrange(0,int(16))*SQUARE_SIZE
+        y = random.randrange(0,int(16))*SQUARE_SIZE
         f=1
         while f!=0:
             try:
                 f=self.snake_body.index((x,y))
-                x = random.randrange(0,int(WINDOW_X/SQUARE_SIZE-1))*SQUARE_SIZE
-                y = random.randrange(0,int(WINDOW_X/SQUARE_SIZE-1))*SQUARE_SIZE
+                x = random.randrange(0,int(16))*SQUARE_SIZE
+                y = random.randrange(0,int(16))*SQUARE_SIZE
             except ValueError:
                 f=0    
         self.apple_eaten = False
@@ -187,7 +189,7 @@ class SnakeGame:
     def __print_everything(self, dis, font_source, neural_network, highest_score):
         i=0
         for (a,b) in self.snake_body:
-            pygame.draw.rect(dis,GREEN,[self.snake_body[i][0],self.snake_body[i][1],SQUARE_SIZE,SQUARE_SIZE])
+            pygame.draw.rect(dis,GREEN,[self.snake_body[i][0],self.snake_body[i][1],1*SQUARE_SIZE,1*SQUARE_SIZE])
             i=i+1
 
         pygame.draw.rect(dis,RED,[self.apple_x,self.apple_y,SQUARE_SIZE,SQUARE_SIZE])
@@ -200,6 +202,11 @@ class SnakeGame:
         dis.blit(second_line,(0,25))
         dis.blit(third_line,(0,50))
         dis.blit(fourth_line,(0,75))
+
+        """ print("Highest score: "+ str(highest_score))
+        print("Hidden biases: "+str(numpy.array(neural_network.hidden_neurons_bias)))
+        print("Superior biases: "+str(numpy.array(neural_network.sup_neurons_bias)))
+        print("Output biases: "+str(numpy.array(neural_network.out_neurons_bias))) """
 
         pygame.display.update()
 
@@ -253,7 +260,7 @@ class SnakeGame:
             pass
 
         #Checks if apple eaten
-        if (self.snake_body[0][0]==self.apple_x-SQUARE_SIZE and self.snake_body[0][1]==self.apple_y and self.snake_direction==direction.RIGHT) or (self.snake_body[0][1]==self.apple_y-SQUARE_SIZE and self.snake_body[0][0]==self.apple_x and  self.snake_direction==direction.DOWN) or (self.snake_body[0][0]==self.apple_x+SQUARE_SIZE and self.snake_body[0][1]==self.apple_y and  self.snake_direction==direction.LEFT) or (self.snake_body[0][1]==self.apple_y+SQUARE_SIZE and self.snake_body[0][0]==self.apple_x and  self.snake_direction==direction.UP):
+        if (self.snake_body[0][0]==self.apple_x-1*SQUARE_SIZE and self.snake_body[0][1]==self.apple_y and self.snake_direction==direction.RIGHT) or (self.snake_body[0][1]==self.apple_y-1*SQUARE_SIZE and self.snake_body[0][0]==self.apple_x and  self.snake_direction==direction.DOWN) or (self.snake_body[0][0]==self.apple_x+1*SQUARE_SIZE and self.snake_body[0][1]==self.apple_y and  self.snake_direction==direction.LEFT) or (self.snake_body[0][1]==self.apple_y+1*SQUARE_SIZE and self.snake_body[0][0]==self.apple_x and  self.snake_direction==direction.UP):
             self.apple_eaten = True
             self.__grow()
             self.__create_food()
@@ -263,21 +270,21 @@ class SnakeGame:
         if self.snake_do_mov:
             #Check if wall hit; if not, pop tail and push head
             if self.snake_direction==direction.RIGHT:
-                if self.snake_body[self.snake_curr_head][0]==(WINDOW_X/SQUARE_SIZE-1)*SQUARE_SIZE:
+                if self.snake_body[self.snake_curr_head][0]==15*1*SQUARE_SIZE:
                     aux = self.score
                     self.res_init()
                     return aux, True
                 else:    
                     self.snake_body.pop()
-                    self.snake_body.insert(0, (self.snake_body[0][0]+SQUARE_SIZE,self.snake_body[0][1]))
+                    self.snake_body.insert(0, (self.snake_body[0][0]+1*SQUARE_SIZE,self.snake_body[0][1]))
             elif self.snake_direction==direction.DOWN:
-                if self.snake_body[self.snake_curr_head][1]==(WINDOW_Y/SQUARE_SIZE-1)*SQUARE_SIZE:
+                if self.snake_body[self.snake_curr_head][1]==15*1*SQUARE_SIZE:
                     aux = self.score
                     self.res_init()
                     return aux, True
                 else:
                     self.snake_body.pop()
-                    self.snake_body.insert(0, (self.snake_body[0][0],self.snake_body[0][1]+SQUARE_SIZE))
+                    self.snake_body.insert(0, (self.snake_body[0][0],self.snake_body[0][1]+1*SQUARE_SIZE))
             elif self.snake_direction==direction.LEFT:
                 if self.snake_body[self.snake_curr_head][0]==0:
                     aux = self.score
@@ -285,7 +292,7 @@ class SnakeGame:
                     return aux, True
                 else:
                     self.snake_body.pop()
-                    self.snake_body.insert(0, (self.snake_body[0][0]-SQUARE_SIZE,self.snake_body[0][1]))
+                    self.snake_body.insert(0, (self.snake_body[0][0]-1*SQUARE_SIZE,self.snake_body[0][1]))
             elif self.snake_direction==direction.UP:
                 if self.snake_body[self.snake_curr_head][1]==0:
                     aux = self.score
@@ -293,7 +300,7 @@ class SnakeGame:
                     return aux, True
                 else:
                     self.snake_body.pop()
-                    self.snake_body.insert(0, (self.snake_body[0][0],self.snake_body[0][1]-SQUARE_SIZE))
+                    self.snake_body.insert(0, (self.snake_body[0][0],self.snake_body[0][1]-1*SQUARE_SIZE))
 
         self.__print_everything(dis, font_source, neural_network, highest_score)
 
@@ -420,8 +427,13 @@ game_over = False
 n_games = 0
 game_steps = 0
 
+#Init file configuration
+THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
+BEST_FILE = open(os.path.join(THIS_FOLDER, "best_NN"), 'wb')
+
+
 #Exploration
-while highest_score<5:
+while highest_score<6:
     curr_status = my_snake.status_eval()
     final_move = my_neural_network.feed_forward(curr_status)
     curr_score, game_over = my_snake.play_step(final_move, dis, my_font, my_neural_network, highest_score)
@@ -434,6 +446,10 @@ while highest_score<5:
     if curr_score > highest_score:
         highest_score = curr_score
         best_neural_network = my_neural_network
+
+        BEST_FILE = open(os.path.join(THIS_FOLDER, "best_NN"), 'wb')
+        pickle.dump(best_neural_network, BEST_FILE)
+        BEST_FILE.close()
     
     game_steps+=1
     if game_steps>=100:
