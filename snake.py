@@ -14,7 +14,7 @@ WINDOW_X=800
 WINDOW_Y=800
 
 #Clock ticking speed
-SPEED = 10000000
+SPEED = 1000
 
 class direction(Enum):
     RIGHT = 0
@@ -302,8 +302,8 @@ class SnakeGame:
 
 class NeuralNetwork():
     IN_NEURONS_NUMBER = 11
-    HIDDEN_NEURONS_NUMBER = 7
-    SUP_NEURONS_NUMBER = 7
+    HIDDEN_NEURONS_NUMBER = 8
+    SUP_NEURONS_NUMBER = 8
     OUT_NEURONS_NUMBER = 4
 
     in_neurons_value = [0]*IN_NEURONS_NUMBER
@@ -440,11 +440,13 @@ while highest_score<5:
         my_neural_network.randomize()
         n_games+=1
         game_steps = 0
-    #clock.tick(SPEED)
+    clock.tick(SPEED)
 
 print("Exploration over")
 
 #Exploitation
+
+SPEED = 10
 while True:
     curr_status = my_snake.status_eval()
     final_move = best_neural_network.feed_forward(curr_status)
@@ -466,4 +468,4 @@ while True:
         best_neural_network.mutate(AMOUNT)
         game_steps=0
 
-    #clock.tick(SPEED)
+    clock.tick(SPEED)
