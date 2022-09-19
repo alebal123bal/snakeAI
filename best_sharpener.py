@@ -378,7 +378,7 @@ BEST_FILE.close()
 
 #Exploitation
 
-while highest_score<16:
+while True:
     curr_status = my_snake.status_eval()
     final_move = best_neural_network.feed_forward(curr_status)
     curr_score, game_over = my_snake.play_step(final_move, my_font, best_neural_network, highest_score)
@@ -387,7 +387,7 @@ while highest_score<16:
         n_games+=1
         game_steps = 0
 
-    if curr_score > highest_score:
+    if curr_score > 19:
         highest_score = curr_score
         print(highest_score)
 
