@@ -9,12 +9,12 @@ BLUE=(0,0,255)
 WHITE=(255,255,255)
 
 #Change aspect of snake and window
-SQUARE_SIZE=50
-WINDOW_X=800
-WINDOW_Y=800
+SQUARE_SIZE=10
+WINDOW_X=16*SQUARE_SIZE
+WINDOW_Y=16*SQUARE_SIZE
 
 #Clock ticking speed
-SPEED = 1000
+SPEED = 10
 
 class direction(Enum):
     RIGHT = 0
