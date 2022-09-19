@@ -380,7 +380,7 @@ BEST_FILE = open(os.path.join(THIS_FOLDER, "best_NN"), 'wb')
 
 
 #Exploration
-while highest_score<8:
+while highest_score<9:
     curr_status = my_snake.status_eval()
     final_move = my_neural_network.feed_forward(curr_status)
     curr_score, game_over = my_snake.play_step(final_move, my_font, my_neural_network, highest_score)
