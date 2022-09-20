@@ -394,6 +394,7 @@ while True:
         BEST_FILE = open(os.path.join(THIS_FOLDER, "best_NN_10_highest"), 'wb')
         pickle.dump(best_neural_network, BEST_FILE)
         BEST_FILE.close()
+        quit()
 
     game_steps+=1
     if game_steps>=300:
